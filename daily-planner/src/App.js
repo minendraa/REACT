@@ -9,13 +9,13 @@ function App() {
   // Create a unique key for today's date in YYYY-MM-DD format
   const todayKey = today.toISOString().split('T')[0];
 
-  const workHours = [9, 10, 11, 12, 13, 14, 15, 16, 17]; // 9 AM to 5 PM
+  // The workHours array still uses 24-hour format for logic
+  const workHours = [6,7,8,9, 10, 11, 12, 13, 14, 15, 16, 17,18,19,20,21]; // 9 AM to 5 PM
 
   const [tasks, setTasks] = useState({});
 
   // EFFECT 1: Load tasks from localStorage when the component mounts
   useEffect(() => {
-    // We use todayKey to ensure we only load tasks for the current day
     const savedTasks = localStorage.getItem(todayKey);
     if (savedTasks) {
       setTasks(JSON.parse(savedTasks));
@@ -24,7 +24,6 @@ function App() {
 
   // EFFECT 2: Save tasks to localStorage whenever the tasks state changes
   useEffect(() => {
-    // Only save if tasks object is not empty.
     if (Object.keys(tasks).length > 0) {
       localStorage.setItem(todayKey, JSON.stringify(tasks));
     }
@@ -37,6 +36,18 @@ function App() {
       [hour]: text,
     }));
   };
+
+  // --- CHANGE 1: Helper function to format the time ---
+  // This function converts a 24-hour number into a 12-hour string (e.g., 13 -> "1 PM")
+  const formatHour12 = (hour) => {
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    // Convert 24-hour time to 12-hour.
+    // The modulo (%) handles hours 13-23.
+    // The `|| 12` handles the case for 12 PM (12 % 12 is 0).
+    const displayHour = hour % 12 || 12;
+
+    return `${displayHour} ${ampm}`;
+  };
   
   return (
     <div className="app-container">
@@ -47,17 +58,18 @@ function App() {
       <main className="time-slots">
         {workHours.map(hour => (
           <div key={hour} className="time-slot">
-            <div className="hour">{hour}:00</div>
+            {/* --- CHANGE 2: Use the formatting function for display --- */}
+            <div className="hour">{formatHour12(hour)}</div>
             <textarea
               className="task-input"
               value={tasks[hour] || ''}
               onChange={(e) => handleInputChange(hour, e.target.value)}
               placeholder="Add a task..."
             />
-            {/* The save button is now more for visual confirmation, as tasks save on type */}
             <button
               className="save-button"
-              onClick={() => alert(`Task for ${hour}:00 saved!`)}
+              /* --- CHANGE 3: Also update the alert message for consistency --- */
+              onClick={() => alert(`Task for ${formatHour12(hour)} saved!`)}
             >
               ✓
             </button>
